@@ -1,0 +1,19 @@
+# PAXG Trading Bot Panel - Python Dependencies
+
+# Hyperliquid SDK
+hyperliquid-python-sdk>=0.4.0
+
+# Data Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Cryptography (required by hyperliquid-python-sdk)
+eth-account>=0.8.0
+eth-utils>=2.1.0
+
+# Note: curses is built-in on Linux/Mac systems
+# For Windows users, install windows-curses:
+# windows-curses>=2.3.0
