@@ -1,4 +1,4 @@
-# Free hyperliquid Python Trading Bot 4 PAXG + Panel
+# Free Hyperliquid Python3 Trading Bot 4 PAXG + Panel
 
 A real-time monitoring and trading panel for PAXG (Paxos Gold) using the RSI 1MIN Double Confirm strategy on Hyperliquid.
 
