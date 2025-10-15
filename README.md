@@ -11,6 +11,33 @@ A real-time monitoring and trading panel for PAXG (Paxos Gold) using the RSI 1MI
 
 After signing up, get your API keys from: [Hyperliquid API Settings](https://app.hyperliquid.xyz/API)
 
+## Screenshots
+
+The bot features a clean, three-tab interface for monitoring and controlling your trading operations:
+
+### Main Dashboard
+![Main Dashboard](screenshots/Main.png)
+*Real-time account overview with balance, current position, and RSI indicator*
+
+### Bot Control Panel
+![Bot Control](screenshots/Bot.png)
+*Start/stop the bot, view activity logs, and monitor current trading signals*
+
+### Trade History
+![Trade History](screenshots/History.png)
+*Track your last 20 PAXG trades with detailed information*
+
+## Version 0.1 - Basic Release
+
+**[📦 Download v0.1 Release](https://github.com/aiwebarchitects/hyperliquid_free_trading_bot/releases/tag/Hyperliquid)**
+
+This is Version 0.1, a basic release with the following characteristics:
+
+- **Single Algorithm**: RSI 1MIN Double Confirm strategy only
+- **Single Timeframe**: 1-minute candles
+- **3-Tab Interface**: Home, Bot, and History panels
+- **Manual Start**: Trading bot must be started manually on the Bot tab (press 'S' key)
+- **No Backtesting**: This version does not include a backtesting system
 
 ## Overview
 
