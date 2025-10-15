@@ -1,6 +1,6 @@
-# Free Hyperliquid Python Trading Bot 4 PAXG + Panel
+# Free Hyperliquid Python Trading Bot 4 PAXG + Panel v0.2
 
-A real-time monitoring and trading panel for PAXG (Paxos Gold) using the RSI 1MIN Double Confirm strategy on Hyperliquid.
+A real-time monitoring and trading panel for PAXG (Paxos Gold) using the RSI 1MIN Double Confirm strategy on Hyperliquid, now with integrated backtesting!
 
 ![Free Hyperliquid Trading Bot](free_hyperliquid_trading_bot.png)
 
@@ -13,7 +13,7 @@ After signing up, get your API keys from: [Hyperliquid API Settings](https://app
 
 ## Screenshots
 
-The bot features a clean, three-tab interface for monitoring and controlling your trading operations:
+The bot features a clean, four-tab interface for monitoring, controlling, and backtesting your trading operations:
 
 ### Main Dashboard
 ![Main Dashboard](screenshots/Main.png)
@@ -27,17 +27,18 @@ The bot features a clean, three-tab interface for monitoring and controlling you
 ![Trade History](screenshots/History.png)
 *Track your last 20 PAXG trades with detailed information*
 
-## Version 0.1 - Basic Release
+### Backtest Analysis
+![Backtest](screenshots/Backtest.png)
+*Test your strategy with historical data and view comprehensive performance metrics*
 
-**[📦 Download v0.1 Release](https://github.com/aiwebarchitects/hyperliquid_free_trading_bot/releases/tag/Hyperliquid)**
+## Version 0.2 - Backtest Integration Release
 
-This is Version 0.1, a basic release with the following characteristics:
-
-- **Single Algorithm**: RSI 1MIN Double Confirm strategy only
-- **Single Timeframe**: 1-minute candles
-- **3-Tab Interface**: Home, Bot, and History panels
-- **Manual Start**: Trading bot must be started manually on the Bot tab (press 'S' key)
-- **No Backtesting**: This version does not include a backtesting system
+**What's New in v0.2:**
+- ✨ **Integrated Backtesting**: Test your strategy directly from the panel
+- 📊 **4-Tab Interface**: Added dedicated BACKTEST tab
+- 🧹 **Cleaner Codebase**: Removed unused algorithms (MACD, SMA, Support Volume, Vol24)
+- 📁 **Better Organization**: Backtesting files moved to `helpers/` folder
+- 🎯 **Focused Strategy**: Optimized for RSI 1MIN Double Confirm only
 
 ## Overview
 
@@ -50,7 +51,8 @@ This bot implements a SHORT-based trading strategy using RSI (Relative Strength 
 
 - 🎯 **Real-time Monitoring**: Live account balance, positions, and RSI tracking
 - 🤖 **Automated Trading**: Set-and-forget bot with configurable parameters
-- 📊 **Multi-Tab Interface**: Main dashboard, bot control, and trade history
+- 📊 **4-Tab Interface**: Main dashboard, bot control, trade history, and backtesting
+- 🔬 **Integrated Backtesting**: Test strategy performance with historical data
 - 🔒 **Risk Management**: Built-in take profit and stop loss protection
 - 🌐 **Testnet Support**: Test strategies safely before going live
 
@@ -109,9 +111,10 @@ python3 paxg_panel.py
 
 ### Keyboard Controls
 
-- **TAB** or **←/→**: Switch between tabs (Main, Bot, History)
+- **TAB** or **←/→**: Switch between tabs (Main, Bot, History, Backtest)
 - **S**: Start the automated trading bot
 - **X**: Stop the automated trading bot
+- **B**: Run backtest (when on BACKTEST tab)
 - **R**: Refresh data manually
 - **Q**: Quit the application
 
@@ -120,6 +123,28 @@ python3 paxg_panel.py
 1. **MAIN**: Account overview, current position, and RSI indicator
 2. **BOT**: Bot control, activity logs, and current signals
 3. **HISTORY**: Last 20 PAXG trades
+4. **BACKTEST**: Strategy backtesting with performance metrics
+
+## Backtesting
+
+### How to Use
+
+1. Navigate to the **BACKTEST** tab
+2. Review current settings (RSI period, thresholds, take profit, stop loss)
+3. Press **B** to run backtest
+4. View results including:
+   - Win rate and total profit
+   - Profit factor and max drawdown
+   - Average profit per trade
+   - Recent trades with entry/exit details
+
+### Backtest Features
+
+- Fetches real 1-minute PAXG data from Binance
+- Tests up to 1000 candles (approximately 16 hours of data)
+- Shows detailed trade-by-trade results
+- Displays comprehensive performance metrics
+- Uses same parameters as live trading
 
 ## Trading Strategy
 
@@ -158,12 +183,21 @@ The bot uses the following optimized parameters:
 
 ```python
 # Network Configuration
-BOT_USE_TESTNET = True  # Set to False for mainnet
+BOT_USE_TESTNET = False  # Set to True for testnet
 
 # Trading Configuration
 BOT_POSITION_VALUE_USD = 100.0  # Position size per trade
 BOT_MAX_TOTAL_POSITION_USD = 500.0  # Maximum total position
 BOT_BUY_COOLDOWN_MINUTES = 5  # Cooldown between trades
+
+# RSI Parameters
+BOT_RSI_PERIOD = 10
+BOT_RSI_OVERSOLD = 20
+BOT_RSI_OVERBOUGHT = 65
+
+# Risk Management
+BOT_TAKE_PROFIT = 0.015  # 1.5%
+BOT_STOP_LOSS = -0.007   # -0.7%
 ```
 
 ## Safety Features
@@ -173,20 +207,34 @@ BOT_BUY_COOLDOWN_MINUTES = 5  # Cooldown between trades
 - ✅ Trade cooldown periods
 - ✅ Automatic stop loss
 - ✅ Manual bot control (start/stop anytime)
+- ✅ Backtesting before live trading
 
 ## File Structure
 
 ```
-hyperliquid_free_trading_bot/
+hyperliquid_free_trading_bot_0.2/
 ├── paxg_panel.py                    # Main application
 ├── settings.py                      # Bot configuration
 ├── README.md                        # This file
 ├── requirements.txt                 # Python dependencies
 ├── system_files.txt                 # System documentation
+├── changelog_v_0.2.md              # Version changelog
 ├── free_hyperliquid_trading_bot.png # Bot screenshot
-└── executer/
-    ├── example_utils.py             # Exchange utilities
-    └── config.json                  # API credentials
+├── algos/                           # Trading algorithms
+│   ├── __init__.py
+│   ├── base_algorithm.py
+│   ├── rsi_algorithm.py
+│   └── rsi_1min_double_confirm_algorithm.py
+├── helpers/                         # Helper modules
+│   ├── backtest_helper.py          # Panel backtester
+│   └── start_backtesting.py        # Standalone backtester
+├── executer/                        # Exchange utilities
+│   ├── example_utils.py
+│   └── config.json                 # API credentials
+└── screenshots/                     # UI screenshots
+    ├── Main.png
+    ├── Bot.png
+    └── History.png
 ```
 
 ## Troubleshooting
@@ -204,10 +252,33 @@ If you see "Terminal too small!", resize your terminal to at least 60x20 charact
 - Check your internet connection
 - Wait a few seconds for initial data load
 
+### Backtest Errors
+- Ensure you have internet connectivity (fetches data from Binance)
+- Check that pandas and requests are properly installed
+- Try running backtest again if it times out
+
+## Changelog
+
+### Version 0.2 (Current)
+- Added integrated backtesting system
+- New BACKTEST tab in panel interface
+- Moved backtesting files to `helpers/` folder
+- Removed unused algorithms (MACD, SMA, Support Volume, Vol24)
+- Cleaner, more focused codebase
+- Updated documentation
+
+### Version 0.1
+- Initial release
+- 3-tab interface (Main, Bot, History)
+- RSI 1MIN Double Confirm strategy
+- Manual bot start/stop
+- Basic monitoring features
+
 ## Disclaimer
 
 ⚠️ **IMPORTANT**: This bot is for educational purposes only. Trading cryptocurrencies involves substantial risk of loss. Always:
 - Test thoroughly on testnet first
+- Use backtesting to validate strategy
 - Start with small position sizes
 - Never invest more than you can afford to lose
 - Monitor the bot regularly
@@ -220,3 +291,7 @@ This project is provided as-is without any warranty. Use at your own risk.
 ## Support
 
 For issues or questions, please check the system_files.txt for technical details or review the code documentation.
+
+## Contributing
+
+This is an open-source project. Feel free to fork, modify, and improve!

@@ -20,6 +20,9 @@ import settings
 import pandas as pd
 import requests
 
+# Import backtest helper
+from helpers.backtest_helper import PanelBacktester
+
 
 class PAXGPanel:
     def __init__(self, stdscr, use_testnet: bool = None):
@@ -76,8 +79,8 @@ class PAXGPanel:
         self.last_update = None
         
         # Current view/tab
-        self.current_tab = 0  # 0=Main, 1=Bot, 2=History
-        self.tab_names = ["MAIN", "BOT", "HISTORY"]
+        self.current_tab = 0  # 0=Main, 1=Bot, 2=History, 3=Backtest
+        self.tab_names = ["MAIN", "BOT", "HISTORY", "BACKTEST"]
         
         # Trade history
         self.trade_history = []
@@ -96,6 +99,11 @@ class PAXGPanel:
         self.info = None
         self.exchange = None
         self._setup_exchange()
+        
+        # Initialize backtester
+        self.backtester = PanelBacktester()
+        self.backtest_results = None
+        self.backtest_running = False
     
     def _setup_exchange(self):
         """Setup exchange connection"""
@@ -411,6 +419,164 @@ class PAXGPanel:
             self.safe_addstr(y, 2, "No trade history available. Press R to load.")
             self.stdscr.attroff(curses.color_pair(4))
             y += 2
+        
+        return y
+    
+    def draw_backtest_tab(self, start_y):
+        """Draw backtest tab"""
+        h, w = self.stdscr.getmaxyx()
+        y = start_y
+        
+        if y >= h - 2:
+            return y
+        
+        # Section title
+        self.stdscr.attron(curses.A_BOLD | curses.color_pair(3))
+        self.safe_addstr(y, 2, "STRATEGY BACKTESTING - RSI 1MIN DOUBLE CONFIRM")
+        self.stdscr.attroff(curses.A_BOLD | curses.color_pair(3))
+        y += 2
+        
+        # Controls
+        if y < h - 1:
+            self.stdscr.attron(curses.color_pair(4))
+            if not self.backtest_running:
+                self.safe_addstr(y, 4, "Press B to run backtest with current settings | Press C to run with custom parameters")
+            else:
+                self.safe_addstr(y, 4, "Backtest running... Please wait")
+            self.stdscr.attroff(curses.color_pair(4))
+        y += 2
+        
+        # Current settings
+        self.stdscr.attron(curses.A_BOLD | curses.color_pair(3))
+        self.safe_addstr(y, 2, "CURRENT SETTINGS")
+        self.stdscr.attroff(curses.A_BOLD | curses.color_pair(3))
+        y += 1
+        
+        if y < h - 1:
+            self.safe_addstr(y, 4, f"RSI Period:       {self.rsi_period}")
+        y += 1
+        
+        if y < h - 1:
+            self.safe_addstr(y, 4, f"Oversold:         {self.oversold_threshold}")
+        y += 1
+        
+        if y < h - 1:
+            self.safe_addstr(y, 4, f"Overbought:       {self.overbought_threshold}")
+        y += 1
+        
+        if y < h - 1:
+            self.safe_addstr(y, 4, f"Take Profit:      {self.take_profit_pct*100:.1f}%")
+        y += 1
+        
+        if y < h - 1:
+            self.safe_addstr(y, 4, f"Stop Loss:        {abs(self.stop_loss_pct)*100:.1f}%")
+        y += 2
+        
+        # Backtest status
+        if y < h - 1:
+            self.safe_addstr(y, 4, f"Status: {self.backtester.status}")
+        y += 1
+        
+        if self.backtester.progress > 0 and y < h - 1:
+            progress_bar_width = 40
+            filled = int(progress_bar_width * self.backtester.progress / 100)
+            bar = "█" * filled + "░" * (progress_bar_width - filled)
+            self.safe_addstr(y, 4, f"Progress: [{bar}] {self.backtester.progress}%")
+        y += 2
+        
+        # Results
+        if self.backtest_results and self.backtest_results.get('success'):
+            metrics = self.backtest_results['metrics']
+            
+            self.stdscr.attron(curses.A_BOLD | curses.color_pair(3))
+            self.safe_addstr(y, 2, "BACKTEST RESULTS")
+            self.stdscr.attroff(curses.A_BOLD | curses.color_pair(3))
+            y += 1
+            
+            if y < h - 1:
+                self.safe_addstr(y, 4, f"Date Range:       {self.backtest_results['date_range']}")
+            y += 1
+            
+            if y < h - 1:
+                self.safe_addstr(y, 4, f"Data Points:      {self.backtest_results['data_points']:,}")
+            y += 1
+            
+            if y < h - 1:
+                self.safe_addstr(y, 4, f"Total Trades:     {metrics['total_trades']}")
+            y += 1
+            
+            if y < h - 1:
+                win_rate = metrics['win_rate']
+                win_color = curses.color_pair(1) if win_rate >= 50 else curses.color_pair(2)
+                self.safe_addstr(y, 4, "Win Rate:         ")
+                self.stdscr.attron(curses.A_BOLD | win_color)
+                self.safe_addstr(y, 22, f"{win_rate:.2f}%")
+                self.stdscr.attroff(curses.A_BOLD | win_color)
+            y += 1
+            
+            if y < h - 1:
+                total_profit = metrics['total_profit']
+                profit_color = curses.color_pair(1) if total_profit >= 0 else curses.color_pair(2)
+                self.safe_addstr(y, 4, "Total Profit:     ")
+                self.stdscr.attron(curses.A_BOLD | profit_color)
+                self.safe_addstr(y, 22, f"{total_profit:.2f}%")
+                self.stdscr.attroff(curses.A_BOLD | profit_color)
+            y += 1
+            
+            if y < h - 1:
+                self.safe_addstr(y, 4, f"Profit Factor:    {metrics['profit_factor']:.2f}")
+            y += 1
+            
+            if y < h - 1:
+                self.safe_addstr(y, 4, f"Max Drawdown:     {metrics['max_drawdown']:.2f}%")
+            y += 1
+            
+            if y < h - 1:
+                avg_profit = metrics['avg_profit']
+                avg_color = curses.color_pair(1) if avg_profit >= 0 else curses.color_pair(2)
+                self.safe_addstr(y, 4, "Avg Profit/Trade: ")
+                self.stdscr.attron(avg_color)
+                self.safe_addstr(y, 22, f"{avg_profit:.2f}%")
+                self.stdscr.attroff(avg_color)
+            y += 2
+            
+            # Recent trades
+            trades = self.backtester.get_trade_summary(max_trades=5)
+            if trades and y < h - 5:
+                self.stdscr.attron(curses.A_BOLD | curses.color_pair(3))
+                self.safe_addstr(y, 2, "RECENT TRADES (Last 5)")
+                self.stdscr.attroff(curses.A_BOLD | curses.color_pair(3))
+                y += 1
+                
+                # Header
+                self.stdscr.attron(curses.A_BOLD)
+                self.safe_addstr(y, 4, "Entry Time       Exit Time        Side   Entry     Exit      Profit   Reason")
+                self.stdscr.attroff(curses.A_BOLD)
+                y += 1
+                
+                for trade in trades:
+                    if y >= h - 4:
+                        break
+                    
+                    side_color = curses.color_pair(2)  # SHORT is red
+                    profit_color = curses.color_pair(1) if trade['profit_pct'] >= 0 else curses.color_pair(2)
+                    
+                    self.safe_addstr(y, 4, f"{trade['entry_time']}  {trade['exit_time']}  ")
+                    self.stdscr.attron(side_color)
+                    self.safe_addstr(y, 43, f"{trade['side']:5s}")
+                    self.stdscr.attroff(side_color)
+                    self.safe_addstr(y, 49, f"  ${trade['entry_price']:7.2f}  ${trade['exit_price']:7.2f}  ")
+                    self.stdscr.attron(profit_color)
+                    self.safe_addstr(y, 73, f"{trade['profit_pct']:6.2f}%")
+                    self.stdscr.attroff(profit_color)
+                    self.safe_addstr(y, 81, f"  {trade['exit_reason'][:10]}")
+                    y += 1
+        
+        elif self.backtest_results and not self.backtest_results.get('success'):
+            if y < h - 1:
+                self.stdscr.attron(curses.color_pair(2))
+                self.safe_addstr(y, 4, f"Error: {self.backtest_results.get('error', 'Unknown error')}")
+                self.stdscr.attroff(curses.color_pair(2))
         
         return y
     
@@ -968,6 +1134,8 @@ class PAXGPanel:
                 y = self.draw_bot_tab(4)
             elif self.current_tab == 2:  # History tab
                 y = self.draw_history_tab(4)
+            elif self.current_tab == 3:  # Backtest tab
+                y = self.draw_backtest_tab(4)
             
             # Draw footer (always visible)
             self.draw_footer()
@@ -1003,6 +1171,19 @@ class PAXGPanel:
                 if self.bot_running:
                     self.bot_running = False
                     self.add_log("🛑 Bot STOPPED - Auto-trading disabled")
+            elif key == ord('b') or key == ord('B'):  # Run backtest
+                if self.current_tab == 3 and not self.backtest_running:
+                    self.backtest_running = True
+                    # Run backtest in background (simplified - runs synchronously)
+                    self.backtest_results = self.backtester.run_backtest(
+                        period=self.rsi_period,
+                        oversold=self.oversold_threshold,
+                        overbought=self.overbought_threshold,
+                        take_profit=self.take_profit_pct,
+                        stop_loss=self.stop_loss_pct,
+                        days=1  # Test with 1 day of data (max 1000 candles from Binance)
+                    )
+                    self.backtest_running = False
 
 
 def main(stdscr):

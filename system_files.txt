@@ -1,4 +1,48 @@
-paxg_panel.py
-settings.py
-executer/example_utils.py
-executer/config.json
+# Hyperliquid Free Trading Bot v0.2 - System Files
+
+## Core Application Files
+paxg_panel.py                    # Main panel application with 4-tab interface
+settings.py                      # Bot configuration and parameters
+
+## Algorithm Files
+algos/__init__.py                # Algorithm factory and exports
+algos/base_algorithm.py          # Base algorithm class and backtest engine
+algos/rsi_algorithm.py           # Standard RSI algorithm
+algos/rsi_1min_double_confirm_algorithm.py  # RSI 1MIN Double Confirm (active strategy)
+
+## Helper Modules
+helpers/backtest_helper.py       # Panel backtesting module
+helpers/start_backtesting.py     # Standalone backtesting script
+
+## Exchange Integration
+executer/example_utils.py        # Hyperliquid exchange utilities
+executer/config.json             # API credentials (user-configured)
+
+## Documentation
+README.md                        # Main documentation
+changelog_v_0.2.md              # Version 0.2 changelog
+system_files.txt                # This file
+
+## Assets
+free_hyperliquid_trading_bot.png # Bot screenshot
+screenshots/Main.png             # Main tab screenshot
+screenshots/Bot.png              # Bot tab screenshot
+screenshots/History.png          # History tab screenshot
+screenshots/Backtest.png         # Backtest tab screenshot
+
+## Dependencies
+requirements.txt                 # Python package dependencies
+
+## Version Information
+Version: 0.2
+Release Date: October 15, 2025
+Python: 3.8+
+Platform: Linux/Mac (curses UI)
+
+## Key Features
+- 4-tab interface (Main, Bot, History, Backtest)
+- RSI 1MIN Double Confirm strategy
+- Integrated backtesting system
+- Real-time monitoring
+- Automated trading with risk management
+- Testnet/Mainnet support
